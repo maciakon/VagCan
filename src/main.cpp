@@ -1,5 +1,6 @@
 #include <mcp_can.h>
 #include <SPI.h>
+#include "pids.h"
 
 // 7E0/8 = Engine ECM
 // 7E1/9 = Transmission ECM
@@ -11,8 +12,7 @@
 // CAN TX Variables
 unsigned long prevTx = 0;
 unsigned int invlTx = 1000;
-byte txData[] = {0x02,0x01,0x00,0x55,0x55,0x55,0x55,0x55}; // AVAILABLE PIDS
-
+byte txData[] = {0x02,0x01,PID_ENGINE_RPM,0x55,0x55,0x55,0x55,0x55}; // AVAILABLE PIDS
 
 // CAN RX Variables
 unsigned long rxID;
@@ -22,7 +22,7 @@ char msgString[128];                        // Array to store serial string
 
 // CAN Interrupt and Chip Select Pins
 #define CAN0_INT 2                              /* Set INT to pin 2 (This rarely changes)   */
-MCP_CAN CAN0(15);                                /* Set CS to pin 9 (Old shields use pin 10) */
+MCP_CAN CAN0(15);                                /* Set CS to pin 15 (Old shields use pin 10) */
 
 
 void setup(){
