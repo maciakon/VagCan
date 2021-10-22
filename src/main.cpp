@@ -1,18 +1,28 @@
 #include <mcp_can.h>
 #include <SPI.h>
 #include "pids.h"
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <ArduinoJson.h>
 
-// 7E0/8 = Engine ECM
-// 7E1/9 = Transmission ECM
+#define LISTEN_ID 0x7EA
+#define REPLY_ID 0x7E0
+#define FUNCTIONAL_ID 0x7DF
 
-  #define LISTEN_ID 0x7EA
-  #define REPLY_ID 0x7E0
-  #define FUNCTIONAL_ID 0x7DF
+// WiFi connection settings
+const char* ssid = "VagCan";
+const char* password = "vagcan1234";
 
-// CAN TX Variables
+// Server settings
+String serverUrl = "http://51.137.0.132:5001";
+String configurationGetEndpoint = "/configuration";
+String mesaurementsPostEndpoint ="/measurements";
+
+// Can settings
 unsigned long prevTx = 0;
 unsigned int invlTx = 1000;
 byte txData[] = {0x02,0x01,PID_ENGINE_RPM,0x55,0x55,0x55,0x55,0x55}; // AVAILABLE PIDS
+byte activePids[10];
 
 // CAN RX Variables
 unsigned long rxID;
@@ -24,12 +34,133 @@ char msgString[128];                        // Array to store serial string
 #define CAN0_INT 2                              /* Set INT to pin 2 (This rarely changes)   */
 MCP_CAN CAN0(15);                                /* Set CS to pin 15 (Old shields use pin 10) */
 
+void sendPID(unsigned char pid)
+{
+  unsigned char txData[8] = {0x02, 0x01, pid, 0, 0, 0, 0, 0};
+
+  byte sndStat = CAN0.sendMsgBuf(FUNCTIONAL_ID, 0, 8, txData);
+
+  if (sndStat == CAN_OK) {
+    Serial.print("PID sent: 0x");
+    Serial.println(pid, HEX);
+  }
+  else {
+    Serial.println("Error Sending Message...");
+  }
+}
+
+void receivePID(unsigned char pid)
+{
+    CAN0.readMsgBuf(&rxID, &dlc, rxBuf);      // Read data: len = data length, buf = data byte(s)
+
+    // Display received CAN data as we receive it.
+    sprintf(msgString, "Standard ID: 0x%.3lX, DLC: %1d, Data: ", rxID, dlc);
+    Serial.print(msgString);
+
+    for (byte i = 0; i < dlc; i++) {
+      sprintf(msgString, " 0x%.2X", rxBuf[i]);
+      Serial.print(msgString);
+    }
+    Serial.println("");
+
+    switch (pid) {
+      case PID_COOLANT_TEMP:
+        if(rxBuf[2] == PID_COOLANT_TEMP){
+          uint8_t temp;
+          temp = rxBuf[3] - 40;
+          Serial.print("Engine Coolant Temp (degC): ");
+          Serial.println(temp, DEC);
+        }
+      break;
+
+      case PID_ENGINE_RPM:
+        if(rxBuf[2] == PID_ENGINE_RPM){
+          uint16_t rpm;
+          rpm = ((256 * rxBuf[3]) + rxBuf[4]) / 4;
+          Serial.print("Engine Speed (rpm): ");
+          Serial.println(rpm, DEC);
+        }
+      break;
+    }
+}
+
+void sendGetRequest(String endpoint)
+{
+   StaticJsonDocument<768> doc;
+   if(WiFi.status()== WL_CONNECTED){
+      WiFiClient client;
+      HTTPClient http;
+
+      String serverPath = serverUrl + endpoint;
+      
+      // Your Domain name with URL path or IP address with path
+      http.begin(client, serverPath.c_str());
+      
+      // Send HTTP GET request
+      int httpResponseCode = http.GET();
+      
+      if (httpResponseCode>0) {
+        Serial.print("HTTP Response code: ");
+        Serial.println(httpResponseCode);
+        String payload = http.getString();
+        int str_len = payload.length() + 1; 
+        // Prepare the character array (the buffer) 
+        char char_array[str_len];
+
+        // Copy it over 
+        payload.toCharArray(char_array, str_len);
+        Serial.println(payload);
+
+        DeserializationError error = deserializeJson(doc, char_array);
+        if (error) 
+        {
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.f_str());
+        }
+        else
+        {
+          for(JsonObject item : doc.as<JsonArray>())
+          {
+            int i = 0;
+            byte pidValue = item["value"]; 
+            bool isActive = item["isActive"];
+            if(isActive)
+            {
+              activePids[i] = pidValue;
+              Serial.print("Adding active PID value: ");
+              Serial.println(pidValue, DEC);
+              i++;
+            }
+          }
+        }
+      }
+      else {
+        Serial.print("Error code: ");
+        Serial.println(httpResponseCode);
+      }
+      // Free resources
+      http.end();
+    }
+    else {
+      Serial.println("WiFi Disconnected");
+    }
+}
 
 void setup(){
-
   Serial.begin(115200);
   while(!Serial);
  
+ // Initialize WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+ 
+    delay(1000);
+    Serial.print("Connecting..");
+  }
+
+  // Get configuration from server
+  sendGetRequest(configurationGetEndpoint);
+
   // Initialize MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
   if(CAN0.begin(MCP_NORMAL, CAN_500KBPS, MCP_8MHZ) == CAN_OK)
     Serial.println("MCP2515 Initialized Successfully!");
@@ -49,7 +180,7 @@ void setup(){
   CAN0.init_Filt(4,0x7DF0000);                // Init fifth filter...
   CAN0.init_Filt(5,0x7E10000);                // Init sixth filter...
 
-  CAN0.setMode(MCP_NORMAL);                      // Set operation mode to normal so the MCP2515 sends acks to received data.
+  CAN0.setMode(MCP_LOOPBACK);                      // Set operation mode to normal so the MCP2515 sends acks to received data.
 
   pinMode(CAN0_INT, INPUT);                          // Configuring pin for /INT input
  
@@ -58,42 +189,14 @@ void setup(){
 
 void loop(){
 
-  if(!digitalRead(CAN0_INT)){                         // If CAN0_INT pin is low, read receive buffer
- 
-    CAN0.readMsgBuf(&rxID, &dlc, rxBuf);             // Get CAN data
-  
-    // Display received CAN data as we receive it.
-    if((rxID & 0x80000000) == 0x80000000)     // Determine if ID is standard (11 bits) or extended (29 bits)
-      sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (rxID & 0x1FFFFFFF), dlc);
-    else
-      sprintf(msgString, "Standard ID: 0x%.3lX       DLC: %1d  Data:", rxID, dlc);
- 
-    Serial.print(msgString);
- 
-    if((rxID & 0x40000000) == 0x40000000){    // Determine if message is a remote request frame.
-      sprintf(msgString, " REMOTE REQUEST FRAME");
-      Serial.print(msgString);
-    } else {
-      for(byte i = 0; i<dlc; i++){
-        sprintf(msgString, " 0x%.2X", rxBuf[i]);
-        Serial.print(msgString);
-      }
-    }
-      
-    Serial.println();
+  if(!digitalRead(CAN0_INT)) {                         // If CAN0_INT pin is low, read receive buffer
+    receivePID(PID_ENGINE_RPM);
   }
  
-  /* Every 1000ms (One Second) send a request for PID 00           *
-   * This PID responds back with 4 data bytes indicating the PIDs  *
-   * between 0x01 and 0x20 that are supported by the vehicle.      */
+  /* Every 1000ms (One Second) send a request for PID 00           */
   if((millis() - prevTx) >= invlTx){
     prevTx = millis();
-    INT8U result = CAN0.sendMsgBuf(FUNCTIONAL_ID, 8, txData);
-    if( result == CAN_OK){
-      Serial.println("Message Sent Successfully!");
-    } else {
-      Serial.println("Error Sending Message...");
-      Serial.println(result);
-    }
+    //sendPID(PID_ENGINE_RPM);
+    sendGetRequest(configurationGetEndpoint);
   }
 }
