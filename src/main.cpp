@@ -17,12 +17,16 @@ const char* password = "vagcan1234";
 String serverUrl = "http://51.137.0.132:5001";
 String configurationGetEndpoint = "/configuration";
 String mesaurementsPostEndpoint ="/measurements";
+unsigned long previousGetActivePids = 0;
+unsigned int getActivePidsPeriod = 5000;
+
 
 // Can settings
 unsigned long prevTx = 0;
-unsigned int invlTx = 1000;
+unsigned int invlTx = 200;
 byte txData[] = {0x02,0x01,PID_ENGINE_RPM,0x55,0x55,0x55,0x55,0x55}; // AVAILABLE PIDS
 byte activePids[10];
+int alreadySentIndex = 0;
 
 // CAN RX Variables
 unsigned long rxID;
@@ -33,6 +37,8 @@ char msgString[128];                        // Array to store serial string
 // CAN Interrupt and Chip Select Pins
 #define CAN0_INT 2                              /* Set INT to pin 2 (This rarely changes)   */
 MCP_CAN CAN0(15);                                /* Set CS to pin 15 (Old shields use pin 10) */
+
+void sendPostMeasurementsRequest(String endpoint, byte rxBuf[]);
 
 void sendPID(unsigned char pid)
 {
@@ -63,6 +69,8 @@ void receivePID(unsigned char pid)
     }
     Serial.println("");
 
+    sendPostMeasurementsRequest(mesaurementsPostEndpoint, rxBuf);
+
     switch (pid) {
       case PID_COOLANT_TEMP:
         if(rxBuf[2] == PID_COOLANT_TEMP){
@@ -82,6 +90,21 @@ void receivePID(unsigned char pid)
         }
       break;
     }
+}
+
+int sendActivePids(int i)
+{
+  int alreadySentIndex = 0;
+  for(i; i < i + 2; i++)
+  {
+      byte pid = activePids[i];
+      if(pid != 0)
+      {
+        alreadySentIndex++;
+        sendPID(pid);
+      }
+  }
+  return alreadySentIndex;
 }
 
 void sendGetRequest(String endpoint)
@@ -119,9 +142,16 @@ void sendGetRequest(String endpoint)
         }
         else
         {
+          // clear activePids array
+          for(int i = 0; i < 10; i++)
+          {
+            activePids[i] = 0;
+          }
+
+          int i = 0;
+          // write active pids to array
           for(JsonObject item : doc.as<JsonArray>())
           {
-            int i = 0;
             byte pidValue = item["value"]; 
             bool isActive = item["isActive"];
             if(isActive)
@@ -144,6 +174,40 @@ void sendGetRequest(String endpoint)
     else {
       Serial.println("WiFi Disconnected");
     }
+}
+
+void sendPostMeasurementsRequest(String endpoint, byte rxBuf[])
+{
+   if(WiFi.status()== WL_CONNECTED){
+      WiFiClient client;
+      HTTPClient http;
+
+      String serverPath = serverUrl + endpoint;
+      
+      // Your Domain name with URL path or IP address with path
+      http.begin(client, serverPath.c_str());
+      http.addHeader("Content-Type", "application/json");
+      StaticJsonDocument<96> doc;
+
+      doc["PIDCode"] = rxBuf[2];
+      doc["A"] = rxBuf[3];
+      doc["B"] = rxBuf[4];
+      doc["C"] = rxBuf[5];
+      doc["D"] = rxBuf[6];
+
+      char output[128];
+      serializeJson(doc, output);
+      Serial.print("Sending following json:");
+      Serial.println(output);
+
+      int httpResponseCode = http.POST(output);
+      
+      if (httpResponseCode > 0) 
+      {
+        Serial.print("POST HTTP Response code: ");
+        Serial.println(httpResponseCode);
+      }
+   }
 }
 
 void setup(){
@@ -194,9 +258,28 @@ void loop(){
   }
  
   /* Every 1000ms (One Second) send a request for PID 00           */
-  if((millis() - prevTx) >= invlTx){
+  if((millis() - prevTx) >= invlTx)
+  {
     prevTx = millis();
-    //sendPID(PID_ENGINE_RPM);
+    
+    if(activePids[alreadySentIndex] != 0)
+    {
+      sendPID(activePids[alreadySentIndex]);
+    }
+
+    alreadySentIndex++;
+    if(alreadySentIndex >=9 )
+    {
+      alreadySentIndex = 0;
+      Serial.println("### FULL ## SENDING");
+    }
+    
+  }
+
+  /* Every 5000ms send a request for active PIDs          */
+  if((millis() - previousGetActivePids) >= getActivePidsPeriod)
+  {
+    previousGetActivePids = millis();
     sendGetRequest(configurationGetEndpoint);
   }
 }
