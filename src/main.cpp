@@ -14,7 +14,7 @@ const char* ssid = "VagCan";
 const char* password = "vagcan1234";
 
 // Server settings
-String serverUrl = "http://51.137.0.132:5001";
+String serverUrl = "http://20.101.31.211:5001";
 String configurationGetEndpoint = "/configuration";
 String mesaurementsPostEndpoint ="/measurements";
 unsigned long previousGetActivePids = 0;
@@ -55,7 +55,7 @@ void sendPID(unsigned char pid)
   }
 }
 
-void receivePID(unsigned char pid)
+void receivePID()
 {
     CAN0.readMsgBuf(&rxID, &dlc, rxBuf);      // Read data: len = data length, buf = data byte(s)
 
@@ -70,41 +70,6 @@ void receivePID(unsigned char pid)
     Serial.println("");
 
     sendPostMeasurementsRequest(mesaurementsPostEndpoint, rxBuf);
-
-    switch (pid) {
-      case PID_COOLANT_TEMP:
-        if(rxBuf[2] == PID_COOLANT_TEMP){
-          uint8_t temp;
-          temp = rxBuf[3] - 40;
-          Serial.print("Engine Coolant Temp (degC): ");
-          Serial.println(temp, DEC);
-        }
-      break;
-
-      case PID_ENGINE_RPM:
-        if(rxBuf[2] == PID_ENGINE_RPM){
-          uint16_t rpm;
-          rpm = ((256 * rxBuf[3]) + rxBuf[4]) / 4;
-          Serial.print("Engine Speed (rpm): ");
-          Serial.println(rpm, DEC);
-        }
-      break;
-    }
-}
-
-int sendActivePids(int i)
-{
-  int alreadySentIndex = 0;
-  for(i; i < i + 2; i++)
-  {
-      byte pid = activePids[i];
-      if(pid != 0)
-      {
-        alreadySentIndex++;
-        sendPID(pid);
-      }
-  }
-  return alreadySentIndex;
 }
 
 void sendGetRequest(String endpoint)
@@ -219,7 +184,7 @@ void setup(){
   while (WiFi.status() != WL_CONNECTED) {
  
     delay(1000);
-    Serial.print("Connecting..");
+    Serial.print("Connecting...");
   }
 
   // Get configuration from server
@@ -254,7 +219,7 @@ void setup(){
 void loop(){
 
   if(!digitalRead(CAN0_INT)) {                         // If CAN0_INT pin is low, read receive buffer
-    receivePID(PID_ENGINE_RPM);
+    receivePID();
   }
  
   /* Every 1000ms (One Second) send a request for PID 00           */
@@ -268,12 +233,10 @@ void loop(){
     }
 
     alreadySentIndex++;
-    if(alreadySentIndex >=9 )
+    if(alreadySentIndex >= 9)
     {
       alreadySentIndex = 0;
-      Serial.println("### FULL ## SENDING");
     }
-    
   }
 
   /* Every 5000ms send a request for active PIDs          */
