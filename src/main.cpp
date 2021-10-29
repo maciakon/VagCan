@@ -14,7 +14,7 @@ const char* ssid = "VagCan";
 const char* password = "vagcan1234";
 
 // Server settings
-String serverUrl = "http://20.101.31.211:5001";
+String serverUrl = "http://20.76.183.147:5001";
 String configurationGetEndpoint = "/configuration";
 String mesaurementsPostEndpoint ="/measurements";
 unsigned long previousGetActivePids = 0;
@@ -209,7 +209,7 @@ void setup(){
   CAN0.init_Filt(4,0x7DF0000);                // Init fifth filter...
   CAN0.init_Filt(5,0x7E10000);                // Init sixth filter...
 
-  CAN0.setMode(MCP_LOOPBACK);                      // Set operation mode to normal so the MCP2515 sends acks to received data.
+  CAN0.setMode(MCP_NORMAL);                      // Set operation mode to normal so the MCP2515 sends acks to received data.
 
   pinMode(CAN0_INT, INPUT);                          // Configuring pin for /INT input
  
