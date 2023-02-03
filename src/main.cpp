@@ -92,16 +92,9 @@ void onMqttConnect(bool sessionPresent)
   Serial.print("Subscribing at QoS 2, packetId: ");
   Serial.println(packetIdSub);
 
-  // mqttClient.publish(PubTopic, 0, true, "ESP8266 Test1");
-  // Serial.println("Publishing at QoS 0");
-
   // uint16_t packetIdPub1 = mqttClient.publish(PubTopic, 1, true, "ESP8266 Test2");
   // Serial.print("Publishing at QoS 1, packetId: ");
   // Serial.println(packetIdPub1);
-
-  // uint16_t packetIdPub2 = mqttClient.publish(PubTopic, 2, true, "ESP8266 Test3");
-  // Serial.print("Publishing at QoS 2, packetId: ");
-  // Serial.println(packetIdPub2);
 
   printSeparationLine();
 }
@@ -190,7 +183,7 @@ void setup(){
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 
   connectToWifi();
- // ****************************
+
   // Get configuration from server
   RemoteCarDiagzApi.sendGetRequest(activePids);
   // Standard ID Filters
