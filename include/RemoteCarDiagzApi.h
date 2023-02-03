@@ -12,6 +12,6 @@ class RemoteCarDiagzAPI
     private:
         ESP8266WiFiClass _wifi;
         String SERVER_URL;
-        String configurationGetEndpoint;
+        String configurationGetEndpoint = "/configuration";
         String mesaurementsPostEndpoint ="/measurements";
 };
