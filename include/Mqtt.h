@@ -12,6 +12,7 @@ extern AsyncMqttClient mqttClient;
 extern Ticker mqttReconnectTimer;
 
 void connectToMqtt();
+void subscribeToMqttEvents();
 void onMqttConnect(bool sessionPresent);
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
 void onMqttSubscribe(const uint16_t& packetId, const uint8_t& qos);

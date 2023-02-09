@@ -9,9 +9,7 @@
 #include <Ticker.h>
 #include <AsyncMqtt_Generic.h>
 #include "Mqtt.h"
-// WiFi connection settings
-const char* WIFI_SSID = "VagCan";
-const char* WIFI_PASSWORD = "vagcan1234";
+#include "Wifi.h"
 
 unsigned long previousGetActivePids = 0;
 unsigned int getActivePidsPeriod = 5000;
@@ -26,53 +24,24 @@ VagCanMptt MPPT(15);
 RemoteCarDiagzAPI RemoteCarDiagzApi(WiFi);
 AsyncMqttClient mqttClient;
 Ticker mqttReconnectTimer;
+Ticker wifiReconnectTimer;
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
-Ticker wifiReconnectTimer;
 
-void connectToWifi()
+void setup()
 {
-  Serial.println("Connecting to Wi-Fi...");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-}
-
-void onWifiConnect(const WiFiEventStationModeGotIP& event)
-{
-  (void) event;
-
-  Serial.print("Connected to Wi-Fi. IP address: ");
-  Serial.println(WiFi.localIP());
-  connectToMqtt();
-}
-
-void onWifiDisconnect(const WiFiEventStationModeDisconnected& event)
-{
-  (void) event;
-
-  Serial.println("Disconnected from Wi-Fi.");
-  mqttReconnectTimer.detach(); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
-  wifiReconnectTimer.once(2, connectToWifi);
-}
-
-void setup(){
   Serial.begin(115200);
   while(!Serial);
  
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
 
-  mqttClient.onConnect(onMqttConnect);
-  mqttClient.onDisconnect(onMqttDisconnect);
-  mqttClient.onSubscribe(onMqttSubscribe);
-  mqttClient.onUnsubscribe(onMqttUnsubscribe);
-  mqttClient.onMessage(onMqttMessage);
-  mqttClient.onPublish(onMqttPublish);
-  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-
+  subscribeToMqttEvents();
   connectToWifi();
 
   // Get configuration from server
   RemoteCarDiagzApi.sendGetRequest(activePids);
+  
   // Standard ID Filters
   MPPT.initCan();
 
@@ -81,8 +50,9 @@ void setup(){
   Serial.println("Simple CAN OBD-II PID Request");
 }
 
-void loop(){
-  if(!digitalRead(CAN0_INT)) {                         // If CAN0_INT pin is low, read receive buffer
+void loop()
+{
+  if(!digitalRead(CAN0_INT)) {                       // If CAN0_INT pin is low, read receive buffer
     byte* value = MPPT.receivePID();
     RemoteCarDiagzApi.sendPostMeasurementsRequest(value);
   }

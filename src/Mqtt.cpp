@@ -9,6 +9,17 @@ void connectToMqtt()
   mqttClient.connect();
 }
 
+void subscribeToMqttEvents()
+{
+    mqttClient.onConnect(onMqttConnect);
+    mqttClient.onDisconnect(onMqttDisconnect);
+    mqttClient.onSubscribe(onMqttSubscribe);
+    mqttClient.onUnsubscribe(onMqttUnsubscribe);
+    mqttClient.onMessage(onMqttMessage);
+    mqttClient.onPublish(onMqttPublish);
+    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+}
+
 void onMqttConnect(bool sessionPresent)
 {
   Serial.print("Connected to MQTT broker: ");

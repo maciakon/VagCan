@@ -3,7 +3,7 @@
 RemoteCarDiagzAPI::RemoteCarDiagzAPI(ESP8266WiFiClass wifi)
 {
   _wifi = wifi;
-  SERVER_URL = "http://20.76.183.147:5001";
+  SERVER_URL = "http://18.185.185.121:5001";
 }
 
 void RemoteCarDiagzAPI::sendGetRequest(byte* activePids)
