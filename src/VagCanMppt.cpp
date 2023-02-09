@@ -1,9 +1,6 @@
 #include "VagCanMppt.h"
 
-VagCanMptt::VagCanMptt(int pin) : CAN0(pin)
-{
-    _pin = pin; /* Set CS to pin 15 (Old shields use pin 10) */
-}
+VagCanMptt::VagCanMptt(int pin) : CAN0(pin) { }
 
 void VagCanMptt::initCan()
 {

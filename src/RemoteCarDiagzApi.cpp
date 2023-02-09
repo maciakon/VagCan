@@ -82,7 +82,7 @@ void RemoteCarDiagzAPI::sendGetRequest(byte *activePids)
 
 void RemoteCarDiagzAPI::sendPostMeasurementsRequest(byte *rxBuf)
 {
-  if (WiFi.status() == WL_CONNECTED)
+  if (_wifi.status() == WL_CONNECTED)
   {
     WiFiClient client;
     HTTPClient http;

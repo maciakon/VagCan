@@ -15,7 +15,6 @@ class VagCanMptt
         char msgString[128];
         void initCan();
     private:
-        int _pin;
         unsigned long rxID;
         byte dlc;
         byte rxBuf[8];
