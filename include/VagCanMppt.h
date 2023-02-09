@@ -1,7 +1,7 @@
 #include "Arduino.h" 
 #include <mcp_can.h>
 
-#define CAN0_INT 2          /* Set INT to pin 2 (This rarely changes)  */
+#define CAN0_INT 4          /* Set INT to pin 4 (This rarely changes)  */
 #define LISTEN_ID 0x7EA
 #define REPLY_ID 0x7E0
 #define FUNCTIONAL_ID 0x7DF 
