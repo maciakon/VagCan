@@ -31,8 +31,8 @@ WiFiEventHandler wifiDisconnectHandler;
 void setup()
 {
   Serial.begin(115200);
-  while(!Serial);
- 
+  while (!Serial);
+
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
 
@@ -41,41 +41,42 @@ void setup()
 
   // Get configuration from server
   RemoteCarDiagzApi.sendGetRequest(activePids);
-  
+
   // Standard ID Filters
   MPPT.initCan();
 
-  pinMode(CAN0_INT, INPUT);                          // Configuring pin for /INT input
- 
+  pinMode(CAN0_INT, INPUT); // Configuring pin for /INT input
+
   Serial.println("Simple CAN OBD-II PID Request");
 }
 
 void loop()
 {
-  if(!digitalRead(CAN0_INT)) {                       // If CAN0_INT pin is low, read receive buffer
-    byte* value = MPPT.receivePID();
+  if (!digitalRead(CAN0_INT))
+  { // If CAN0_INT pin is low, read receive buffer
+    byte *value = MPPT.receivePID();
     RemoteCarDiagzApi.sendPostMeasurementsRequest(value);
   }
- 
+
   /* Every 1000ms (One Second) send a request for PID 00           */
-  if((millis() - prevTx) >= invlTx)
+  if ((millis() - prevTx) >= invlTx)
   {
     prevTx = millis();
-    
-    if(activePids[alreadySentIndex] != 0)
+
+    if (activePids[alreadySentIndex] != 0)
     {
       MPPT.sendPID(activePids[alreadySentIndex]);
     }
 
     alreadySentIndex++;
-    if(alreadySentIndex >= 9)
+    if (alreadySentIndex >= 9)
     {
       alreadySentIndex = 0;
     }
   }
 
   /* Every 5000ms send a request for active PIDs          */
-  if((millis() - previousGetActivePids) >= getActivePidsPeriod)
+  if ((millis() - previousGetActivePids) >= getActivePidsPeriod)
   {
     previousGetActivePids = millis();
     RemoteCarDiagzApi.sendGetRequest(activePids);
