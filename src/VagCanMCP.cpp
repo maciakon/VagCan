@@ -1,8 +1,8 @@
-#include "VagCanMppt.h"
+#include "VagCanMCP.h"
 
-VagCanMptt::VagCanMptt(int pin) : CAN0(pin) { }
+VagCanMCP::VagCanMCP(int pin) : CAN0(pin) { }
 
-void VagCanMptt::initCan()
+void VagCanMCP::initCan()
 {
     // Initialize MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
     if (CAN0.begin(MCP_NORMAL, CAN_500KBPS, MCP_8MHZ) == CAN_OK)
@@ -29,7 +29,7 @@ void VagCanMptt::initCan()
     pinMode(CAN0_INT, INPUT);
 }
 
-void VagCanMptt::sendPID(unsigned char pid)
+void VagCanMCP::sendPID(unsigned char pid)
 {
     unsigned char txData[8] = {0x02, 0x01, pid, 0, 0, 0, 0, 0}; // AVAILABLE PIDS
 
@@ -46,7 +46,7 @@ void VagCanMptt::sendPID(unsigned char pid)
     }
 };
 
-byte *VagCanMptt::receivePID()
+byte *VagCanMCP::receivePID()
 {
     CAN0.readMsgBuf(&rxID, &dlc, rxBuf); // Read data: len = data length, buf = data byte(s)
 

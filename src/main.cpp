@@ -1,7 +1,7 @@
 #include <mcp_can.h>
 #include <SPI.h>
 #include "pids.h"
-#include "VagCanMppt.h"
+#include "VagCanMCP.h"
 #include "RemoteCarDiagzApi.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -20,7 +20,7 @@ unsigned int invlTx = 200;
 byte activePids[10];
 int alreadySentIndex = 0;
 
-VagCanMptt MPPT(15);
+VagCanMCP VagMCP(15);
 RemoteCarDiagzAPI RemoteCarDiagzApi(WiFi);
 AsyncMqttClient mqttClient;
 Ticker mqttReconnectTimer;
@@ -43,7 +43,7 @@ void setup()
   RemoteCarDiagzApi.sendGetRequest(activePids);
 
   // Standard ID Filters
-  MPPT.initCan();
+  VagMCP.initCan();
 
   pinMode(CAN0_INT, INPUT); // Configuring pin for /INT input
 
@@ -54,7 +54,7 @@ void loop()
 {
   if (!digitalRead(CAN0_INT))
   { // If CAN0_INT pin is low, read receive buffer
-    byte *value = MPPT.receivePID();
+    byte *value = VagMCP.receivePID();
     RemoteCarDiagzApi.sendPostMeasurementsRequest(value);
   }
 
@@ -65,7 +65,7 @@ void loop()
 
     if (activePids[alreadySentIndex] != 0)
     {
-      MPPT.sendPID(activePids[alreadySentIndex]);
+      VagMCP.sendPID(activePids[alreadySentIndex]);
     }
 
     alreadySentIndex++;
