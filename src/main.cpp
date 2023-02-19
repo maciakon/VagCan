@@ -14,7 +14,7 @@
 unsigned long previousGetActivePids = 0;
 unsigned int getActivePidsPeriod = 5000;
 
-// Can settings
+// Can settings2
 unsigned long prevTx = 0;
 unsigned int invlTx = 200;
 byte activePids[10];
