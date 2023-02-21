@@ -8,6 +8,7 @@
 #include <ArduinoJson.h>
 #include <Ticker.h>
 #include <AsyncMqtt_Generic.h>
+#include <AsyncHTTPRequest_Generic.h>
 #include "Mqtt.h"
 #include "Wifi.h"
 
@@ -21,11 +22,12 @@ byte activePids[10];
 int alreadySentIndex = 0;
 
 VagCanMCP VagMCP(15);
-RemoteCarDiagzAPI RemoteCarDiagzApi(WiFi);
+RemoteCarDiagzAPI RemoteCarDiagzApi(activePids);
 AsyncMqttClient mqttClient;
 Ticker mqttReconnectTimer;
 Ticker wifiReconnectTimer;
 WiFiEventHandler wifiConnectHandler;
+WiFiEventHandler mcpWifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
 
 void setup()
@@ -34,20 +36,15 @@ void setup()
   while (!Serial);
 
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+  mcpWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&RemoteCarDiagzAPI::onWifiConnect, RemoteCarDiagzApi,std::placeholders::_1));
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
 
   subscribeToMqttEvents();
   connectToWifi();
 
-  // Get configuration from server
-  RemoteCarDiagzApi.sendGetRequest(activePids);
-
-  // Standard ID Filters
-  VagMCP.initCan();
+  VagMCP.initCan();   // Initialize CAN
 
   pinMode(CAN0_INT, INPUT); // Configuring pin for /INT input
-
-  Serial.println("Simple CAN OBD-II PID Request");
 }
 
 void loop()
@@ -56,6 +53,7 @@ void loop()
   { // If CAN0_INT pin is low, read receive buffer
     byte *value = VagMCP.receivePID();
     RemoteCarDiagzApi.sendPostMeasurementsRequest(value);
+    // here goes MQTT publish
   }
 
   /* Every 1000ms (One Second) send a request for PID 00           */
@@ -73,12 +71,5 @@ void loop()
     {
       alreadySentIndex = 0;
     }
-  }
-
-  /* Every 5000ms send a request for active PIDs          */
-  if ((millis() - previousGetActivePids) >= getActivePidsPeriod)
-  {
-    previousGetActivePids = millis();
-    RemoteCarDiagzApi.sendGetRequest(activePids);
   }
 }
