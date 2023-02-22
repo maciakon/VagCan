@@ -4,7 +4,6 @@
 #include <Ticker.h>
 
 extern Ticker wifiReconnectTimer;
-extern Ticker mqttReconnectTimer;
 void connectToWifi();
 void onWifiConnect(const WiFiEventStationModeGotIP& event);
 void onWifiDisconnect(const WiFiEventStationModeDisconnected& event);

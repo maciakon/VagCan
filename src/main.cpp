@@ -20,15 +20,16 @@ unsigned long prevTx = 0;
 unsigned int invlTx = 200;
 byte activePids[10];
 int alreadySentIndex = 0;
-
+AsyncMqttClient mqttClient;
 VagCanMCP VagMCP(15);
 RemoteCarDiagzAPI RemoteCarDiagzApi(activePids);
-AsyncMqttClient mqttClient;
-Ticker mqttReconnectTimer;
+Mqtt RemoteCarDiagzMqtt;
 Ticker wifiReconnectTimer;
 WiFiEventHandler wifiConnectHandler;
+WiFiEventHandler mqttWifiConnectHandler;
 WiFiEventHandler mcpWifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
+WiFiEventHandler mqttWifiDisconnectHandler;
 
 void setup()
 {
@@ -37,9 +38,10 @@ void setup()
 
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   mcpWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&RemoteCarDiagzAPI::onWifiConnect, RemoteCarDiagzApi,std::placeholders::_1));
+  mqttWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&Mqtt::onWifiConnect, RemoteCarDiagzMqtt,std::placeholders::_1));
+  mqttWifiDisconnectHandler =  WiFi.onStationModeDisconnected(std::bind(&Mqtt::onWifiDisconnect, RemoteCarDiagzMqtt,std::placeholders::_1));
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-
-  subscribeToMqttEvents();
+  
   connectToWifi();
 
   VagMCP.initCan();   // Initialize CAN

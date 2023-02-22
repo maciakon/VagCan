@@ -3,24 +3,37 @@
 const char *PubTopic = "async-mqtt/ESP8266_Pub";
 const char *SubTopic = "remotecardiagz/activemeasurements";
 
-void connectToMqtt()
+void Mqtt::onWifiConnect(const WiFiEventStationModeGotIP &event)
+{
+    this->subscribeToMqttEvents();
+    this->connectToMqtt();
+}
+
+void Mqtt::onWifiDisconnect(const WiFiEventStationModeDisconnected &event)
+{
+    Serial.println("Subscribing to MQTT events...");
+    _mqttReconnectTimer.detach(); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
+}
+
+void Mqtt::subscribeToMqttEvents()
+{
+    Serial.println("Subscribing to MQTT events...");
+    mqttClient.onConnect(std::bind(&Mqtt::onMqttConnect, this, std::placeholders::_1));
+    mqttClient.onDisconnect(std::bind(&Mqtt::onMqttDisconnect, this, std::placeholders::_1));
+    mqttClient.onSubscribe(std::bind(&Mqtt::onMqttSubscribe, this, std::placeholders::_1,  std::placeholders::_2));
+    mqttClient.onUnsubscribe(std::bind(&Mqtt::onMqttUnsubscribe, this ,std::placeholders::_1));
+    mqttClient.onMessage(std::bind(&Mqtt::onMqttMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
+    mqttClient.onPublish(std::bind(&Mqtt::onMqttPublish, this, std::placeholders::_1));
+    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+}
+
+void Mqtt::connectToMqtt()
 {
     Serial.println("Connecting to MQTT...");
     mqttClient.connect();
 }
 
-void subscribeToMqttEvents()
-{
-    mqttClient.onConnect(onMqttConnect);
-    mqttClient.onDisconnect(onMqttDisconnect);
-    mqttClient.onSubscribe(onMqttSubscribe);
-    mqttClient.onUnsubscribe(onMqttUnsubscribe);
-    mqttClient.onMessage(onMqttMessage);
-    mqttClient.onPublish(onMqttPublish);
-    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
-}
-
-void onMqttConnect(bool sessionPresent)
+void Mqtt::onMqttConnect(bool sessionPresent)
 {
     Serial.print("Connected to MQTT broker: ");
     Serial.print(MQTT_HOST);
@@ -44,7 +57,7 @@ void onMqttConnect(bool sessionPresent)
     printSeparationLine();
 }
 
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
+void Mqtt::onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
     (void)reason;
 
@@ -52,11 +65,11 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 
     if (WiFi.isConnected())
     {
-        mqttReconnectTimer.once(2, connectToMqtt);
+         _mqttReconnectTimer.once(2, std::bind(&Mqtt::connectToMqtt, this));
     }
 }
 
-void onMqttSubscribe(const uint16_t &packetId, const uint8_t &qos)
+void Mqtt::onMqttSubscribe(const uint16_t &packetId, const uint8_t &qos)
 {
     Serial.println("Subscribe acknowledged.");
     Serial.print("  packetId: ");
@@ -65,19 +78,19 @@ void onMqttSubscribe(const uint16_t &packetId, const uint8_t &qos)
     Serial.println(qos);
 }
 
-void onMqttUnsubscribe(const uint16_t &packetId)
+void Mqtt::onMqttUnsubscribe(const uint16_t &packetId)
 {
     Serial.println("Unsubscribe acknowledged.");
     Serial.print("  packetId: ");
     Serial.println(packetId);
 }
 
-void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties,
+void Mqtt::onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties,
                    const size_t &len, const size_t &index, const size_t &total)
 {
     (void)payload;
 
-    Serial.println("Publish received.");
+    Serial.println("Message received.");
     Serial.print("  topic: ");
     Serial.println(topic);
     Serial.print("  qos: ");
@@ -96,14 +109,14 @@ void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessagePrope
     Serial.print(payload);
 }
 
-void onMqttPublish(const uint16_t &packetId)
+void Mqtt::onMqttPublish(const uint16_t &packetId)
 {
     Serial.println("Publish acknowledged.");
     Serial.print("  packetId: ");
     Serial.println(packetId);
 }
 
-void printSeparationLine()
+void Mqtt::printSeparationLine()
 {
     Serial.println("************************************************");
 }
