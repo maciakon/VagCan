@@ -3,6 +3,7 @@
 #include <AsyncMqttClient_Generic.hpp>
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
+#include <ArduinoJson.h>
 
 #define MQTT_HOST IPAddress(18, 185, 185, 121) // 18.185.185.121
 #define MQTT_PORT 1883
@@ -12,11 +13,13 @@ extern AsyncMqttClient mqttClient;
 class Mqtt
 {
 public:
+    Mqtt(byte *activePids);
     void onWifiConnect(const WiFiEventStationModeGotIP &event);
     void onWifiDisconnect(const WiFiEventStationModeDisconnected &event);
 
 private:
     Ticker _mqttReconnectTimer;
+    byte* _activePids;
     void connectToMqtt();
     void subscribeToMqttEvents();
     void onMqttConnect(bool sessionPresent);

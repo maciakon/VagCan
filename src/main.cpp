@@ -19,14 +19,14 @@ int alreadySentIndex = 0;
 AsyncMqttClient mqttClient;
 VagCanMCP VagMCP(15);
 RemoteCarDiagzAPI RemoteCarDiagzApi(activePids);
-Mqtt RemoteCarDiagzMqtt;
+Mqtt RemoteCarDiagzMqtt(activePids);
 Ticker wifiReconnectTimer;
 Ticker sendPidRequestTimer;
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler mqttWifiConnectHandler;
+WiFiEventHandler mqttWifiDisconnectHandler;
 WiFiEventHandler mcpWifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
-WiFiEventHandler mqttWifiDisconnectHandler;
 
 void setupWifiConnectionHandlers();
 void sendPidRequest();
@@ -44,8 +44,8 @@ void setup()
 void loop()
 {
   if (!digitalRead(CAN0_INT))
-  { // If CAN0_INT pin is low, read receive buffer
-    byte *value = VagMCP.receivePID();
+  { 
+    byte *value = VagMCP.receivePID();  // If CAN0_INT pin is low, read receive buffer
     RemoteCarDiagzApi.sendPostMeasurementsRequest(value);
     // here goes MQTT publish
   }
