@@ -14,10 +14,6 @@
 
 unsigned long previousGetActivePids = 0;
 unsigned int getActivePidsPeriod = 5000;
-
-// Can settings
-unsigned long prevTx = 0;
-unsigned int invlTx = 200;
 byte activePids[10];
 int alreadySentIndex = 0;
 AsyncMqttClient mqttClient;
@@ -25,28 +21,24 @@ VagCanMCP VagMCP(15);
 RemoteCarDiagzAPI RemoteCarDiagzApi(activePids);
 Mqtt RemoteCarDiagzMqtt;
 Ticker wifiReconnectTimer;
+Ticker sendPidRequestTimer;
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler mqttWifiConnectHandler;
 WiFiEventHandler mcpWifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
 WiFiEventHandler mqttWifiDisconnectHandler;
 
+void setupWifiConnectionHandlers();
+void sendPidRequest();
+
 void setup()
 {
   Serial.begin(115200);
   while (!Serial);
-
-  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-  mcpWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&RemoteCarDiagzAPI::onWifiConnect, RemoteCarDiagzApi,std::placeholders::_1));
-  mqttWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&Mqtt::onWifiConnect, RemoteCarDiagzMqtt,std::placeholders::_1));
-  mqttWifiDisconnectHandler =  WiFi.onStationModeDisconnected(std::bind(&Mqtt::onWifiDisconnect, RemoteCarDiagzMqtt,std::placeholders::_1));
-  wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-  
+  setupWifiConnectionHandlers();
   connectToWifi();
-
   VagMCP.initCan();   // Initialize CAN
-
-  pinMode(CAN0_INT, INPUT); // Configuring pin for /INT input
+  sendPidRequestTimer.attach_ms(500, sendPidRequest);
 }
 
 void loop()
@@ -57,13 +49,11 @@ void loop()
     RemoteCarDiagzApi.sendPostMeasurementsRequest(value);
     // here goes MQTT publish
   }
+}
 
-  /* Every 1000ms (One Second) send a request for PID 00           */
-  if ((millis() - prevTx) >= invlTx)
-  {
-    prevTx = millis();
-
-    if (activePids[alreadySentIndex] != 0)
+void sendPidRequest()
+{
+   if (activePids[alreadySentIndex] != 0)
     {
       VagMCP.sendPID(activePids[alreadySentIndex]);
     }
@@ -73,5 +63,13 @@ void loop()
     {
       alreadySentIndex = 0;
     }
-  }
+}
+
+void setupWifiConnectionHandlers()
+{
+  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+  mcpWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&RemoteCarDiagzAPI::onWifiConnect, RemoteCarDiagzApi,std::placeholders::_1));
+  mqttWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&Mqtt::onWifiConnect, RemoteCarDiagzMqtt,std::placeholders::_1));
+  mqttWifiDisconnectHandler =  WiFi.onStationModeDisconnected(std::bind(&Mqtt::onWifiDisconnect, RemoteCarDiagzMqtt,std::placeholders::_1));
+  wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
 }

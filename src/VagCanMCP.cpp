@@ -4,6 +4,8 @@ VagCanMCP::VagCanMCP(int pin) : CAN0(pin) { }
 
 void VagCanMCP::initCan()
 {
+    pinMode(CAN0_INT, INPUT); // Configuring pin for /INT input
+    
     // Initialize MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
     if (CAN0.begin(MCP_NORMAL, CAN_500KBPS, MCP_8MHZ) == CAN_OK)
         Serial.println("MCP2515 Initialized Successfully!");
