@@ -14,6 +14,9 @@ class Mqtt
 public:
     void onWifiConnect(const WiFiEventStationModeGotIP &event);
     void onWifiDisconnect(const WiFiEventStationModeDisconnected &event);
+
+private:
+    Ticker _mqttReconnectTimer;
     void connectToMqtt();
     void subscribeToMqttEvents();
     void onMqttConnect(bool sessionPresent);
@@ -22,10 +25,7 @@ public:
     void onMqttUnsubscribe(const uint16_t &packetId);
     void onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties, const size_t &len, const size_t &index, const size_t &total);
     void onMqttPublish(const uint16_t &packetId);
-
-private:
     void printSeparationLine();
-    Ticker _mqttReconnectTimer;
 };
 
 #endif
