@@ -32,21 +32,6 @@ void RemoteCarDiagzAPI::onWifiConnect(const WiFiEventStationModeGotIP &event)
   }
 }
 
-void RemoteCarDiagzAPI::sendPostMeasurementsRequest(byte *rxBuf)
-{
-  StaticJsonDocument<96> doc;
-  doc["PIDCode"] = rxBuf[2];
-  doc["A"] = rxBuf[3];
-  doc["B"] = rxBuf[4];
-  doc["C"] = rxBuf[5];
-  doc["D"] = rxBuf[6];
-
-  char output[128];
-  serializeJson(doc, output);
-  Serial.print("Sending following json:");
-  Serial.println(output);
-}
-
 void RemoteCarDiagzAPI::requestCB(void *optParm, AsyncHTTPRequest *request, int readyState)
 {
   byte *activePids = (byte *)optParm;

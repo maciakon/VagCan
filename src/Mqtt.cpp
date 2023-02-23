@@ -1,6 +1,6 @@
 #include "Mqtt.h"
 
-const char *PubTopic = "async-mqtt/ESP8266_Pub";
+const char *PubTopic = "remotecardiagz/publishmeasurements";
 const char *SubTopic = "remotecardiagz/activemeasurements";
 
 Mqtt::Mqtt(byte* activePids)
@@ -38,6 +38,21 @@ void Mqtt::connectToMqtt()
     mqttClient.connect();
 }
 
+void Mqtt::publishMessage(byte* value)
+{
+    StaticJsonDocument<96> doc;
+    doc["PIDCode"] = value[2];
+    doc["A"] = value[3];
+    doc["B"] = value[4];
+    doc["C"] = value[5];
+    doc["D"] = value[6];
+    char output[128];
+    serializeJson(doc, output);
+    uint16_t packetIdPub1 = mqttClient.publish(PubTopic, 1, true, output);
+    Serial.print("Publishing at QoS 1, packetId: ");
+    Serial.println(packetIdPub1);
+}
+
 void Mqtt::onMqttConnect(bool sessionPresent)
 {
     Serial.print("Connected to MQTT broker: ");
@@ -54,10 +69,7 @@ void Mqtt::onMqttConnect(bool sessionPresent)
     uint16_t packetIdSub = mqttClient.subscribe(SubTopic, 2);
     Serial.print("Subscribing at QoS 2, packetId: ");
     Serial.println(packetIdSub);
-
-    // uint16_t packetIdPub1 = mqttClient.publish(PubTopic, 1, true, "ESP8266 Test2");
-    // Serial.print("Publishing at QoS 1, packetId: ");
-    // Serial.println(packetIdPub1);
+    
 
     printSeparationLine();
 }

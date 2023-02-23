@@ -16,6 +16,7 @@ public:
     Mqtt(byte *activePids);
     void onWifiConnect(const WiFiEventStationModeGotIP &event);
     void onWifiDisconnect(const WiFiEventStationModeDisconnected &event);
+    void publishMessage(byte* value);
 
 private:
     Ticker _mqttReconnectTimer;

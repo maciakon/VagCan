@@ -12,8 +12,6 @@
 #include "Mqtt.h"
 #include "Wifi.h"
 
-unsigned long previousGetActivePids = 0;
-unsigned int getActivePidsPeriod = 5000;
 byte activePids[10];
 int alreadySentIndex = 0;
 AsyncMqttClient mqttClient;
@@ -37,8 +35,8 @@ void setup()
   while (!Serial);
   setupWifiConnectionHandlers();
   connectToWifi();
-  VagMCP.initCan();   // Initialize CAN
-  sendPidRequestTimer.attach_ms(500, sendPidRequest);
+  VagMCP.initCan();
+  sendPidRequestTimer.attach_ms(20, sendPidRequest);
 }
 
 void loop()
@@ -46,8 +44,7 @@ void loop()
   if (!digitalRead(CAN0_INT))
   { 
     byte *value = VagMCP.receivePID();  // If CAN0_INT pin is low, read receive buffer
-    RemoteCarDiagzApi.sendPostMeasurementsRequest(value);
-    // here goes MQTT publish
+    RemoteCarDiagzMqtt.publishMessage(value);
   }
 }
 

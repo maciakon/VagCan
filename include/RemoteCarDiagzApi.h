@@ -10,7 +10,6 @@ class RemoteCarDiagzAPI
     public:
         RemoteCarDiagzAPI(byte* activePids);
         void onWifiConnect(const WiFiEventStationModeGotIP &event);
-        void sendPostMeasurementsRequest(byte* rxBuf);
         static void requestCB(void *optParm, AsyncHTTPRequest *request, int readyState);
         
     private:
