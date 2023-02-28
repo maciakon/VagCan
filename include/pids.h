@@ -1,3 +1,6 @@
+#ifndef PIDS_H
+#define PIDS_H
+#include <Arduino.h>
 #define PID_ENGINE_LOAD 0x04
 #define PID_COOLANT_TEMP 0x05
 #define PID_SHORT_TERM_FUEL_TRIM_1 0x06
@@ -49,3 +52,12 @@
 #define PID_ENGINE_TORQUE_DEMANDED 0x61
 #define PID_ENGINE_TORQUE_PERCENTAGE 0x62
 #define PID_ENGINE_REF_TORQUE 0x63
+
+struct keyValuePair {
+    uint8_t value;
+    String humanReadable;
+};
+
+keyValuePair calculateValue(byte *sensorReading);
+
+#endif

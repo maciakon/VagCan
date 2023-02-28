@@ -1,6 +1,6 @@
 #include "Mqtt.h"
 
-const char *PubTopic = "remotecardiagz/publishmeasurements";
+const String PubTopic = "remotecardiagz/pids/";
 const char *SubTopic = "remotecardiagz/activemeasurements";
 
 Mqtt::Mqtt(byte* activePids)
@@ -38,17 +38,14 @@ void Mqtt::connectToMqtt()
     mqttClient.connect();
 }
 
-void Mqtt::publishMessage(byte* value)
+void Mqtt::publishMessage(String topic, byte value)
 {
-    StaticJsonDocument<96> doc;
-    doc["PIDCode"] = value[2];
-    doc["A"] = value[3];
-    doc["B"] = value[4];
-    doc["C"] = value[5];
-    doc["D"] = value[6];
-    char output[128];
-    serializeJson(doc, output);
-    uint16_t packetIdPub1 = mqttClient.publish(PubTopic, 1, true, output);
+    String publishTopic = PubTopic + topic;
+    Serial.println("pubishing to topic:");    
+    Serial.println(publishTopic.c_str());
+    char sensorValue[4];
+    sprintf_P(sensorValue, "%d", value);
+    uint16_t packetIdPub1 = mqttClient.publish(publishTopic.c_str(), 1, true, sensorValue);
     Serial.print("Publishing at QoS 1, packetId: ");
     Serial.println(packetIdPub1);
 }

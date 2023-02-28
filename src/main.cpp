@@ -25,7 +25,7 @@ WiFiEventHandler mqttWifiConnectHandler;
 WiFiEventHandler mqttWifiDisconnectHandler;
 WiFiEventHandler mcpWifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
-
+keyValuePair calculateValue(byte *sensorReading);
 void setupWifiConnectionHandlers();
 void sendPidRequest();
 
@@ -44,7 +44,8 @@ void loop()
   if (!digitalRead(CAN0_INT))
   { 
     byte *value = VagMCP.receivePID();  // If CAN0_INT pin is low, read receive buffer
-    RemoteCarDiagzMqtt.publishMessage(value);
+    keyValuePair kvp = calculateValue(value);
+    RemoteCarDiagzMqtt.publishMessage(kvp.humanReadable, kvp.value);
   }
 }
 
