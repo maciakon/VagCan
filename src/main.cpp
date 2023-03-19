@@ -9,6 +9,9 @@
 #include <Ticker.h>
 #include <AsyncMqtt_Generic.h>
 #include <AsyncHTTPRequest_Generic.h>
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>  
 #include "Mqtt.h"
 #include "Wifi.h"
 
@@ -36,7 +39,9 @@ void setup()
   Serial.begin(115200);
   while (!Serial);
   setupWifiConnectionHandlers();
-  connectToWifi();
+  WiFiManager wifiManager;
+  wifiManager.autoConnect("AutoConnectAP");
+  //connectToWifi();
   VagMCP.initCan();
   sendPidRequestTimer.attach_ms(50, sendPidRequest);
 }
