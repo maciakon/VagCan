@@ -80,5 +80,4 @@ void setupWifiConnectionHandlers()
   mcpWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&RemoteCarDiagzAPI::onWifiConnect, RemoteCarDiagzApi, std::placeholders::_1));
   mqttWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&Mqtt::onWifiConnect, RemoteCarDiagzMqtt, std::placeholders::_1));
   mqttWifiDisconnectHandler = WiFi.onStationModeDisconnected(std::bind(&Mqtt::onWifiDisconnect, RemoteCarDiagzMqtt, std::placeholders::_1));
-  wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
 }
