@@ -10,7 +10,7 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>  
-#include "Mqtt.h"
+#include "MeasurementsMqttClient.h"
 #include "Wifi.h"
 #include "InitialConfigMqttClient.h"
 
@@ -20,7 +20,7 @@ byte lastPidRequestSent = 0x00;
 uint64 alreadySentIndex = 0;
 AsyncMqttClient mqttClient;
 VagCanMCP VagMCP(15);
-Mqtt RemoteCarDiagzMqtt(activePids);
+MeasurementsMqttClient RemoteCarDiagzMqtt(activePids);
 InitialConfigMqttClient InitialConfigMessageSender(activePids);
 Ticker wifiReconnectTimer;
 Ticker sendPidRequestTimer;
@@ -76,7 +76,7 @@ void sendPidRequest()
 void setupWifiConnectionHandlers()
 {
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-  mqttWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&Mqtt::onWifiConnect, RemoteCarDiagzMqtt, std::placeholders::_1));
+  mqttWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&MeasurementsMqttClient::onWifiConnect, RemoteCarDiagzMqtt, std::placeholders::_1));
   initialConfigMqttClientHandler = WiFi.onStationModeGotIP(std::bind(&InitialConfigMqttClient::onWifiConnect, InitialConfigMessageSender, std::placeholders::_1));
-  mqttWifiDisconnectHandler = WiFi.onStationModeDisconnected(std::bind(&Mqtt::onWifiDisconnect, RemoteCarDiagzMqtt, std::placeholders::_1));
+  mqttWifiDisconnectHandler = WiFi.onStationModeDisconnected(std::bind(&MeasurementsMqttClient::onWifiDisconnect, RemoteCarDiagzMqtt, std::placeholders::_1));
 }
