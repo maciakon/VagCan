@@ -58,6 +58,11 @@ struct keyValuePair {
     String humanReadable;
 };
 
+struct activatedPidsKeyValuePair {
+    byte pidId;
+    bool isActive;
+};
+
 keyValuePair calculateValue(byte *sensorReading);
 
 #endif

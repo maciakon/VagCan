@@ -3,7 +3,7 @@
 const String PubTopic = "remotecardiagz/pids/";
 const char *SubTopic = "remotecardiagz/activemeasurements";
 
-Mqtt::Mqtt(byte* activePids)
+Mqtt::Mqtt(activatedPidsKeyValuePair* activePids)
 {
     _activePids = activePids;
 }
@@ -102,6 +102,10 @@ void Mqtt::onMqttUnsubscribe(const uint16_t &packetId)
 void Mqtt::onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties,
                          const size_t &len, const size_t &index, const size_t &total)
 {
+    if(strcmp(topic, SubTopic) != 0)
+    {
+        return;
+    }
     Serial.println("Message received.");
     Serial.print("  topic: ");
     Serial.println(topic);
@@ -111,18 +115,12 @@ void Mqtt::onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessag
     DeserializationError error = deserializeJson(doc, payload);
     if (error)
     {
-        Serial.print("Serialization ERROR");
+        Serial.print("Serialization ERROR ");
         Serial.print(F("deserializeJson() failed: "));
         Serial.println(error.f_str());
     }
     else
     {
-        // clear activePids array
-        for (int i = 0; i < 10; i++)
-        {
-            _activePids[i] = 0;
-        }
-        
         byte pidValue = doc["Value"];
         Serial.println("item value");
         Serial.println(pidValue, DEC);
@@ -130,6 +128,14 @@ void Mqtt::onMqttMessage(char *topic, char *payload, const AsyncMqttClientMessag
         bool isActive = doc["IsActive"];
         Serial.println("IsActive");
         Serial.println(isActive);
+
+        for(int i = 0; i < 10; i++)
+        {
+            if(_activePids[i].pidId == pidValue)
+            {
+                _activePids[i].isActive = isActive;
+            }
+        }
     }
 }
 

@@ -2,33 +2,32 @@
 #include <SPI.h>
 #include "pids.h"
 #include "VagCanMCP.h"
-#include "RemoteCarDiagzApi.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Ticker.h>
 #include <AsyncMqtt_Generic.h>
-#include <AsyncHTTPRequest_Generic.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>  
 #include "Mqtt.h"
 #include "Wifi.h"
+#include "InitialConfigMqttClient.h"
 
-byte activePids[10];
+activatedPidsKeyValuePair activePids[10];
 byte lastPidResponseReceived = 0x00;
 byte lastPidRequestSent = 0x00;
 uint64 alreadySentIndex = 0;
 AsyncMqttClient mqttClient;
 VagCanMCP VagMCP(15);
-RemoteCarDiagzAPI RemoteCarDiagzApi(activePids);
 Mqtt RemoteCarDiagzMqtt(activePids);
+InitialConfigMqttClient InitialConfigMessageSender(activePids);
 Ticker wifiReconnectTimer;
 Ticker sendPidRequestTimer;
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler mqttWifiConnectHandler;
+WiFiEventHandler initialConfigMqttClientHandler;
 WiFiEventHandler mqttWifiDisconnectHandler;
-WiFiEventHandler mcpWifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
 keyValuePair calculateValue(byte *sensorReading);
 void setupWifiConnectionHandlers();
@@ -41,9 +40,8 @@ void setup()
   setupWifiConnectionHandlers();
   WiFiManager wifiManager;
   wifiManager.autoConnect("AutoConnectAP");
-  //connectToWifi();
   VagMCP.initCan();
-  sendPidRequestTimer.attach_ms(50, sendPidRequest);
+  sendPidRequestTimer.attach_ms(200, sendPidRequest);
 }
 
 void loop()
@@ -61,13 +59,14 @@ void sendPidRequest()
 {
   if (lastPidRequestSent == lastPidResponseReceived) //make sure we're ready to send another PID request
   {
-    if (activePids[alreadySentIndex] != 0)
+    if (activePids[alreadySentIndex].isActive == true)
     {
-      VagMCP.sendPID(activePids[alreadySentIndex]);
-      lastPidRequestSent = activePids[alreadySentIndex];
+      Serial.println("Send PID request.");
+      VagMCP.sendPID(activePids[alreadySentIndex].pidId);
+      lastPidRequestSent = activePids[alreadySentIndex].pidId;
     }
     alreadySentIndex++;
-    if (alreadySentIndex > sizeof(activePids) / sizeof(byte) - 1)
+    if (alreadySentIndex > sizeof(activePids) / sizeof(activatedPidsKeyValuePair) - 1)
     {
       alreadySentIndex = 0;
     }
@@ -77,7 +76,7 @@ void sendPidRequest()
 void setupWifiConnectionHandlers()
 {
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-  mcpWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&RemoteCarDiagzAPI::onWifiConnect, RemoteCarDiagzApi, std::placeholders::_1));
   mqttWifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&Mqtt::onWifiConnect, RemoteCarDiagzMqtt, std::placeholders::_1));
+  initialConfigMqttClientHandler = WiFi.onStationModeGotIP(std::bind(&InitialConfigMqttClient::onWifiConnect, InitialConfigMessageSender, std::placeholders::_1));
   mqttWifiDisconnectHandler = WiFi.onStationModeDisconnected(std::bind(&Mqtt::onWifiDisconnect, RemoteCarDiagzMqtt, std::placeholders::_1));
 }

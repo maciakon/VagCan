@@ -1,5 +1,5 @@
-#ifndef MQTT_H
-#define MQTT_H
+#ifndef INTIALCONFIGMQTTCLIENT_H
+#define INTIALCONFIGMQTTCLIENT_H_H
 #include <AsyncMqttClient_Generic.hpp>
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
@@ -11,15 +11,14 @@
 
 extern AsyncMqttClient mqttClient;
 
-class Mqtt
+class InitialConfigMqttClient
 {
 public:
-    Mqtt(activatedPidsKeyValuePair *activePids);
+    InitialConfigMqttClient(activatedPidsKeyValuePair *activePids);
     void onWifiConnect(const WiFiEventStationModeGotIP &event);
     void onWifiDisconnect(const WiFiEventStationModeDisconnected &event);
-    void publishMessage(String topic, byte value);
-    // void publishInitialConfigurationMessage();
-    // const String InitialConfigPubTopic = "remotecardiagz/deviceready";
+    void publishInitialConfigurationMessage();
+    const String InitialConfigPubTopic = "remotecardiagz/deviceready";
 
 private:
     Ticker _mqttReconnectTimer;
