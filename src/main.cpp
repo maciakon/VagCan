@@ -10,9 +10,9 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>  
-#include "MeasurementsMqttClient.h"
+#include "Mqtt\MeasurementsMqttClient.h"
 #include "Wifi.h"
-#include "InitialConfigMqttClient.h"
+#include "Mqtt\InitialConfigMqttClient.h"
 
 activatedPidsKeyValuePair activePids[10];
 byte lastPidResponseReceived = 0x00;

@@ -1,4 +1,4 @@
-#include "InitialConfigMqttClient.h"
+#include "Mqtt\InitialConfigMqttClient.h"
 
 const char *InitialConfigSubTopic = "remotecardiagz/initialconfiguration";
 
