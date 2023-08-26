@@ -10,7 +10,7 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>
-#include "Mqtt\MqttClientBase.h"
+#include "Mqtt\MqttClientWrapper.h"
 #include "Wifi.h"
 
 activatedPidsKeyValuePair activePids[10];
@@ -21,7 +21,7 @@ AsyncMqttClient mqttClient;
 VagCanMCP VagMCP(15);
 Ticker wifiReconnectTimer;
 Ticker sendPidRequestTimer;
-MqttClientBase mqttClientBase(activePids);
+MqttClientWrapper mqttClientWrapper(activePids);
 WiFiEventHandler mqttClientWifiHandler;
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
@@ -47,7 +47,7 @@ void loop()
   {
     byte *value = VagMCP.receivePID(); // If CAN0_INT pin is low, read receive buffer
     keyValuePair kvp = calculateValue(value);
-    mqttClientBase.publishMeasurementMessage(kvp.humanReadable, kvp.value);
+    mqttClientWrapper.publishMeasurementMessage(kvp.humanReadable, kvp.value);
     lastPidResponseReceived = value[2];
   }
 }
@@ -73,5 +73,5 @@ void sendPidRequest()
 void setupWifiConnectionHandlers()
 {
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
-  mqttClientWifiHandler = WiFi.onStationModeGotIP(std::bind(&MqttClientBase::onWifiConnect, mqttClientBase, std::placeholders::_1));
+  mqttClientWifiHandler = WiFi.onStationModeGotIP(std::bind(&MqttClientWrapper::onWifiConnect, mqttClientWrapper, std::placeholders::_1));
 }

@@ -1,7 +1,6 @@
 #ifndef INTIALCONFIGMQTTCLIENT_H
 #define INTIALCONFIGMQTTCLIENT_H_H
 #include <AsyncMqttClient_Generic.hpp>
-#include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <ArduinoJson.h>
 #include "pids.h"
@@ -11,15 +10,17 @@
 
 extern AsyncMqttClient mqttClient;
 
-class InitialConfigMqttHandler
+class ConfigurationMqttHandler
 {
 public:
     activatedPidsKeyValuePair *_activePids;
     const String InitialConfigPubTopic = "remotecardiagz/deviceready";
     const char *InitialConfigSubTopic = "remotecardiagz/initialconfiguration";
-    InitialConfigMqttHandler(activatedPidsKeyValuePair *activePids);
+    const char *MeasurementsChangedSubTopic = "remotecardiagz/activemeasurements";
+    ConfigurationMqttHandler(activatedPidsKeyValuePair *activePids);
     void publishInitialConfigurationMessage();
-    void handleMessage(char *payload);
+    void handleInitialConfigMessage(char *payload);
+    void handleConfigChangedMessage(char *payload);
 private:
     Ticker _mqttReconnectTimer;
 };
