@@ -11,13 +11,13 @@
 
 extern AsyncMqttClient mqttClient;
 
-class InitialConfigMqttClient
+class InitialConfigMqttHandler
 {
 public:
     activatedPidsKeyValuePair *_activePids;
     const String InitialConfigPubTopic = "remotecardiagz/deviceready";
     const char *InitialConfigSubTopic = "remotecardiagz/initialconfiguration";
-    InitialConfigMqttClient(activatedPidsKeyValuePair *activePids);
+    InitialConfigMqttHandler(activatedPidsKeyValuePair *activePids);
     void publishInitialConfigurationMessage();
     void handleMessage(char *payload);
 private:

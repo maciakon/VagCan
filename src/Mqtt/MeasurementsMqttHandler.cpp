@@ -1,10 +1,10 @@
-#include "Mqtt\MeasurementsMqttClient.h"
+#include "Mqtt\MeasurementsMqttHandler.h"
 
-MeasurementsMqttClient::MeasurementsMqttClient(activatedPidsKeyValuePair *activePids) {
+MeasurementsMqttHandler::MeasurementsMqttHandler(activatedPidsKeyValuePair *activePids) {
     _activePids = activePids;
 }
 
-void MeasurementsMqttClient::publishMessage(String topic, byte value)
+void MeasurementsMqttHandler::publishMessage(String topic, byte value)
 {
     String publishTopic = PubTopic + topic;
     Serial.println("pubishing to topic:");
@@ -16,7 +16,7 @@ void MeasurementsMqttClient::publishMessage(String topic, byte value)
     Serial.println(packetIdPub1);
 }
 
-void MeasurementsMqttClient::handleMessage(char *payload)
+void MeasurementsMqttHandler::handleMessage(char *payload)
 {
     Serial.println("Measuremets client handling message:");
     Serial.println("    payload:    ");

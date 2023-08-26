@@ -5,8 +5,8 @@
 #include <Ticker.h>
 #include <ArduinoJson.h>
 #include "pids.h"
-#include "InitialConfigMqttClient.h"
-#include "MeasurementsMqttClient.h"
+#include "InitialConfigMqttHandler.h"
+#include "MeasurementsMqttHandler.h"
 
 #define MQTT_HOST IPAddress(18, 185, 185, 121) // 18.185.185.121
 #define MQTT_PORT 1883
@@ -24,8 +24,8 @@ public:
 
 private:
     Ticker _mqttReconnectTimer;
-    MeasurementsMqttClient _measurementsMqttClient;
-    InitialConfigMqttClient _initialConfigMqttClient;
+    MeasurementsMqttHandler _measurementsMqttClient;
+    InitialConfigMqttHandler _initialConfigMqttClient;
     uint16_t _initialConfigPacketIdSub;
     void connectToMqtt();
     void subscribeToMqttEvents();

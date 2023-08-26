@@ -11,12 +11,12 @@
 
 extern AsyncMqttClient mqttClient;
 
-class MeasurementsMqttClient
+class MeasurementsMqttHandler
 {
 public:
     const String PubTopic = "remotecardiagz/pids/";
     const char *SubTopic = "remotecardiagz/activemeasurements";
-    MeasurementsMqttClient(activatedPidsKeyValuePair *activePids);
+    MeasurementsMqttHandler(activatedPidsKeyValuePair *activePids);
     void publishMessage(String topic, byte value);
     void handleMessage(char *payload);
 

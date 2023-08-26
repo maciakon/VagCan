@@ -1,11 +1,11 @@
-#include "Mqtt\InitialConfigMqttClient.h"
+#include "Mqtt\InitialConfigMqttHandler.h"
 
-InitialConfigMqttClient::InitialConfigMqttClient(activatedPidsKeyValuePair *activePids)
+InitialConfigMqttHandler::InitialConfigMqttHandler(activatedPidsKeyValuePair *activePids)
 {
     _activePids = activePids;
 }
 
-void InitialConfigMqttClient::publishInitialConfigurationMessage()
+void InitialConfigMqttHandler::publishInitialConfigurationMessage()
 {
     String publishTopic = InitialConfigPubTopic;
     Serial.println("Publishing initial config message to topic:");
@@ -15,7 +15,7 @@ void InitialConfigMqttClient::publishInitialConfigurationMessage()
     Serial.println(packetIdPub1);
 }
 
-void InitialConfigMqttClient::handleMessage(char *payload)
+void InitialConfigMqttHandler::handleMessage(char *payload)
 {
     Serial.println("InitialConfig client message received.");
     Serial.print("  topic: ");
