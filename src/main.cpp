@@ -11,7 +11,7 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>
 #include "Mqtt\MqttClientWrapper.h"
-#include "Wifi.h"
+#include "Wifi\WifiEventLogger.h"
 
 activatedPidsKeyValuePair activePids[10];
 byte lastPidResponseReceived = 0x00;
@@ -21,6 +21,7 @@ AsyncMqttClient mqttClient;
 VagCanMCP VagMCP(15);
 Ticker wifiReconnectTimer;
 Ticker sendPidRequestTimer;
+WifiEventLogger wifiEventLogger;
 MqttClientWrapper mqttClientWrapper(activePids);
 WiFiEventHandler mqttClientWifiHandler;
 WiFiEventHandler wifiConnectHandler;
@@ -72,6 +73,6 @@ void sendPidRequest()
 
 void setupWifiConnectionHandlers()
 {
-  wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+  wifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&WifiEventLogger::onWifiConnect, wifiEventLogger, std::placeholders::_1));
   mqttClientWifiHandler = WiFi.onStationModeGotIP(std::bind(&MqttClientWrapper::onWifiConnect, mqttClientWrapper, std::placeholders::_1));
 }
