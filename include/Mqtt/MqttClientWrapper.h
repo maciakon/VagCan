@@ -4,7 +4,7 @@
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include <ArduinoJson.h>
-#include "pids.h"
+#include "Can\pids.h"
 #include "ConfigurationMqttHandler.h"
 #include "MeasurementsMqttMessagePublisher.h"
 

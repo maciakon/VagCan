@@ -9,7 +9,7 @@
 #define PID_LONG_TERM_FUEL_TRIM_2 0x09
 #define PID_FUEL_PRESSURE 0x0A
 #define PID_INTAKE_MAP 0x0B
-#define PID_ENGINE_RPM  0x0C
+#define PID_ENGINE_RPM 0x0C
 #define PID_VEHICLE_SPEED 0x0D
 #define PID_TIMING_ADVANCE 0x0E
 #define PID_INTAKE_TEMP 0x0F
@@ -53,16 +53,16 @@
 #define PID_ENGINE_TORQUE_PERCENTAGE 0x62
 #define PID_ENGINE_REF_TORQUE 0x63
 
-struct keyValuePair {
+struct humanReadablePidValue
+{
     uint8_t value;
     String humanReadable;
 };
 
-struct activatedPidsKeyValuePair {
+struct activatedPidsKeyValuePair
+{
     byte pidId;
     bool isActive;
 };
-
-keyValuePair calculateValue(byte *sensorReading);
 
 #endif

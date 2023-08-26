@@ -1,8 +1,8 @@
-#include "VagCanMCP.h"
+#include "Can\PidProcessor.h"
 
-VagCanMCP::VagCanMCP(int pin) : CAN0(pin) { }
+PidProcessor::PidProcessor(int pin) : CAN0(pin) { }
 
-void VagCanMCP::initCan()
+void PidProcessor::initCan()
 {
     pinMode(CAN0_INT, INPUT); // Configuring pin for /INT input
     
@@ -31,7 +31,7 @@ void VagCanMCP::initCan()
     pinMode(CAN0_INT, INPUT);
 }
 
-void VagCanMCP::sendPID(unsigned char pid)
+void PidProcessor::sendPID(unsigned char pid)
 {
     unsigned char txData[8] = {0x02, 0x01, pid, 0, 0, 0, 0, 0}; // AVAILABLE PIDS
 
@@ -48,7 +48,7 @@ void VagCanMCP::sendPID(unsigned char pid)
     }
 };
 
-byte *VagCanMCP::receivePID()
+byte *PidProcessor::receivePID()
 {
     CAN0.readMsgBuf(&rxID, &dlc, rxBuf); // Read data: len = data length, buf = data byte(s)
 

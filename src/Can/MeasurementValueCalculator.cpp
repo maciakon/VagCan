@@ -1,13 +1,13 @@
-#include "pids.h"
+#include "Can\MeasurementValueCalculator.h"
 
-keyValuePair calculateValue(byte *sensorReading)
+humanReadablePidValue MeasurementValueCalculator::calculateValueFromSensorReading(byte *sensorReading)
 {
     byte pidCode = sensorReading[2];
     byte A = sensorReading[3];
     byte B = sensorReading[4];
     byte C = sensorReading[5];
     byte D = sensorReading[6];
-    keyValuePair kvp;
+    humanReadablePidValue kvp;
 
     switch (pidCode)
     {

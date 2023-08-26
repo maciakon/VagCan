@@ -1,7 +1,7 @@
 #include <mcp_can.h>
 #include <SPI.h>
-#include "pids.h"
-#include "VagCanMCP.h"
+#include "Can\Pids.h"
+#include "Can\PidProcessor.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
@@ -12,13 +12,15 @@
 #include <WiFiManager.h>
 #include "Mqtt\MqttClientWrapper.h"
 #include "Wifi\WifiEventLogger.h"
+#include "Can\MeasurementValueCalculator.h"
 
 activatedPidsKeyValuePair activePids[10];
 byte lastPidResponseReceived = 0x00;
 byte lastPidRequestSent = 0x00;
 uint64 alreadySentIndex = 0;
 AsyncMqttClient mqttClient;
-VagCanMCP VagMCP(15);
+PidProcessor pidProcessing(15);
+MeasurementValueCalculator measurementValueCalculations;
 Ticker wifiReconnectTimer;
 Ticker sendPidRequestTimer;
 WifiEventLogger wifiEventLogger;
@@ -26,7 +28,6 @@ MqttClientWrapper mqttClientWrapper(activePids);
 WiFiEventHandler mqttClientWifiHandler;
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
-keyValuePair calculateValue(byte *sensorReading);
 void setupWifiConnectionHandlers();
 void sendPidRequest();
 
@@ -38,7 +39,7 @@ void setup()
   setupWifiConnectionHandlers();
   WiFiManager wifiManager;
   wifiManager.autoConnect("AutoConnectAP");
-  VagMCP.initCan();
+  pidProcessing.initCan();
   sendPidRequestTimer.attach_ms(200, sendPidRequest);
 }
 
@@ -46,8 +47,8 @@ void loop()
 {
   if (!digitalRead(CAN0_INT))
   {
-    byte *value = VagMCP.receivePID(); // If CAN0_INT pin is low, read receive buffer
-    keyValuePair kvp = calculateValue(value);
+    byte *value = pidProcessing.receivePID(); // If CAN0_INT pin is low, read receive buffer
+    humanReadablePidValue kvp = measurementValueCalculations.calculateValueFromSensorReading(value);
     mqttClientWrapper.publishMeasurementMessage(kvp.humanReadable, kvp.value);
     lastPidResponseReceived = value[2];
   }
@@ -60,7 +61,7 @@ void sendPidRequest()
     if (activePids[alreadySentIndex].isActive == true)
     {
       Serial.println("Send PID request.");
-      VagMCP.sendPID(activePids[alreadySentIndex].pidId);
+      pidProcessing.sendPID(activePids[alreadySentIndex].pidId);
       lastPidRequestSent = activePids[alreadySentIndex].pidId;
     }
     alreadySentIndex++;

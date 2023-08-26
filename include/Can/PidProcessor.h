@@ -6,10 +6,10 @@
 #define REPLY_ID 0x7E0
 #define FUNCTIONAL_ID 0x7DF 
 
-class VagCanMCP 
+class PidProcessor 
 {
     public: 
-        VagCanMCP(int pin);
+        PidProcessor(int pin);
         void sendPID(unsigned char pid);
         byte* receivePID();
         char msgString[128];
