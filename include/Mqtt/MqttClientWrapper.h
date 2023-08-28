@@ -8,7 +8,7 @@
 #include "ConfigurationMqttHandler.h"
 #include "MeasurementsMqttMessagePublisher.h"
 
-#define MQTT_HOST IPAddress(18, 185, 185, 121) // 18.185.185.121
+#define MQTT_HOST "mqtt.remotecardiagz.pl" // 18.185.185.121
 #define MQTT_PORT 1883
 
 extern AsyncMqttClient mqttClient;

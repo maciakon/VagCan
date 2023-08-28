@@ -64,9 +64,8 @@ void MqttClientWrapper::onMqttConnect(bool sessionPresent)
 
 void MqttClientWrapper::onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
-     (void)reason;
-
-     Serial.println("Disconnected from MQTT.");
+     Serial.println("Disconnected from MQTT. Reason:");
+     Serial.println((uint8_t)reason);
 
      if (WiFi.isConnected())
      {
