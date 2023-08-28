@@ -55,7 +55,7 @@
 
 struct humanReadablePidValue
 {
-    uint8_t value;
+    uint16_t value;
     String humanReadable;
 };
 

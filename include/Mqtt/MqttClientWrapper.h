@@ -19,7 +19,7 @@ public:
     MqttClientWrapper(activatedPidsKeyValuePair *activePids);
     void onWifiConnect(const WiFiEventStationModeGotIP &event);
     void onWifiDisconnect(const WiFiEventStationModeDisconnected &event);
-    void publishMeasurementMessage(String topic, byte value);
+    void publishMeasurementMessage(String topic, uint16_t value);
 
 private:
     Ticker _mqttReconnectTimer;

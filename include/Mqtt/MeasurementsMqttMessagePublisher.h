@@ -12,7 +12,7 @@ class MeasurementsMqttMessagePublisher
 public:
     const String PubTopic = "remotecardiagz/pids/";
     MeasurementsMqttMessagePublisher(activatedPidsKeyValuePair *activePids);
-    void publishMessage(String topic, byte value);
+    void publishMessage(String topic, uint16_t value);
 
 private:
     Ticker _mqttReconnectTimer;

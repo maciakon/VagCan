@@ -4,14 +4,14 @@ MeasurementsMqttMessagePublisher::MeasurementsMqttMessagePublisher(activatedPids
     _activePids = activePids;
 }
 
-void MeasurementsMqttMessagePublisher::publishMessage(String topic, byte value)
+void MeasurementsMqttMessagePublisher::publishMessage(String topic, uint16_t value)
 {
     String publishTopic = PubTopic + topic;
-    Serial.println("pubishing to topic:");
+    Serial.println("publishing to topic:");
     Serial.println(publishTopic.c_str());
-    char sensorValue[4];
-    sprintf_P(sensorValue, "%d", value);
+    char sensorValue[6];
+    snprintf(sensorValue, sizeof(sensorValue), "%u", value);
     uint16_t packetIdPub1 = mqttClient.publish(publishTopic.c_str(), 0, true, sensorValue);
     Serial.print("Publishing at QoS 1, packetId: ");
     Serial.println(packetIdPub1);
-}
+} 
