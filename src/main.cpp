@@ -76,4 +76,5 @@ void setupWifiConnectionHandlers()
 {
   wifiConnectHandler = WiFi.onStationModeGotIP(std::bind(&WifiEventLogger::onWifiConnect, wifiEventLogger, std::placeholders::_1));
   mqttClientWifiHandler = WiFi.onStationModeGotIP(std::bind(&MqttClientWrapper::onWifiConnect, mqttClientWrapper, std::placeholders::_1));
+  wifiDisconnectHandler = WiFi.onStationModeDisconnected(std::bind(&MqttClientWrapper::onWifiDisconnect, mqttClientWrapper, std::placeholders::_1));
 }

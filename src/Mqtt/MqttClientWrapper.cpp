@@ -10,7 +10,7 @@ void MqttClientWrapper::onWifiConnect(const WiFiEventStationModeGotIP &event)
 
 void MqttClientWrapper::onWifiDisconnect(const WiFiEventStationModeDisconnected &event)
 {
-     Serial.println("Wifi disconnected in client base.");
+     Serial.println("Wifi disconnected in MqttClientWrapper.");
      _mqttReconnectTimer.detach(); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
 }
 
