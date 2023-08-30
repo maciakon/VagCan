@@ -27,7 +27,7 @@ void PidProcessor::initCan()
     CAN0.init_Filt(4, 0x7DF0000); // Init fifth filter...
     CAN0.init_Filt(5, 0x7E10000); // Init sixth filter...
 
-    CAN0.setMode(MCP_NORMAL); // Set operation mode to normal so the MCP2515 sends acks to received data.
+    CAN0.setMode(MCP_LOOPBACK); // Set operation mode to normal so the MCP2515 sends acks to received data.
     pinMode(CAN0_INT, INPUT);
 }
 

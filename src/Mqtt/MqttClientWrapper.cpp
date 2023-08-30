@@ -14,7 +14,7 @@ void MqttClientWrapper::onWifiDisconnect(const WiFiEventStationModeDisconnected 
      _mqttReconnectTimer.detach(); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
 }
 
-void MqttClientWrapper::publishMeasurementMessage(String topic, uint16_t value)
+void MqttClientWrapper::publishMeasurementMessage(String topic, int value)
 {
      _measurementsMqttClient.publishMessage(topic, value);
 }
