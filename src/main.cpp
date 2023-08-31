@@ -40,7 +40,7 @@ void setup()
   WiFiManager wifiManager;
   wifiManager.autoConnect("AutoConnectAP");
   pidProcessing.initCan();
-  sendPidRequestTimer.attach_ms(200, sendPidRequest);
+  sendPidRequestTimer.attach_ms(100, sendPidRequest);
 }
 
 void loop()
